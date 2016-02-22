@@ -10,21 +10,29 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import com.istarindia.apps.OrganizationTypes;
+import com.istarindia.apps.UserTypes;
 import com.istarindia.apps.dao.Address;
 import com.istarindia.apps.dao.AddressDAO;
 import com.istarindia.apps.dao.College;
 import com.istarindia.apps.dao.CollegeDAO;
 import com.istarindia.apps.dao.Company;
 import com.istarindia.apps.dao.CompanyDAO;
+import com.istarindia.apps.dao.ContentAdminDAO;
+import com.istarindia.apps.dao.ContentCreatorDAO;
+import com.istarindia.apps.dao.CreativeAdminDAO;
+import com.istarindia.apps.dao.CreativeCreatorDAO;
 import com.istarindia.apps.dao.Government;
 import com.istarindia.apps.dao.GovernmentDAO;
 import com.istarindia.apps.dao.GovernmentProject;
+import com.istarindia.apps.dao.IstarUser;
+import com.istarindia.apps.dao.IstarUserDAO;
 import com.istarindia.apps.dao.Organization;
 import com.istarindia.apps.dao.OrganizationDAO;
 import com.istarindia.apps.dao.Pincode;
 import com.istarindia.apps.dao.PincodeDAO;
 import com.istarindia.apps.dao.Student;
 import com.istarindia.apps.dao.StudentDAO;
+import com.istarindia.apps.dao.SuperAdminDAO;
 
 /**
  * @author Vaibhav
@@ -214,11 +222,11 @@ public class OrganizationService {
 		}
 		else if(orgtype.equalsIgnoreCase(OrganizationTypes.COMPANY))
 		{
-			return getAllGovernmentOrgs();
+			return getAllCompaniesOrgs();
 		}
 		else if(orgtype.equalsIgnoreCase(OrganizationTypes.GOVERNMENT))
-		{
-			return getAllCompaniesOrgs();
+		{			
+			return getAllGovernmentOrgs();
 		}
 		else
 		{
@@ -241,7 +249,118 @@ public class OrganizationService {
 		dao.delete(org);
 	}
 	
-    public List<Student> getAllStudentsInOrganization(int organizationId){
+	public void UpdateOrg(int id,int maxStudents, String companyName, String addressline1, String addressline2, int pincode, String orgtype){
+		
+		if(orgtype.equalsIgnoreCase(OrganizationTypes.COLLEGE))
+		{
+			updateCollege(id,maxStudents, companyName, addressline1, addressline2, pincode);
+		}else if(orgtype.equalsIgnoreCase(OrganizationTypes.COMPANY))
+		{
+			updateCompany(id,maxStudents, companyName, addressline1, addressline2, pincode);
+		}	
+		else if(orgtype.equalsIgnoreCase(OrganizationTypes.GOVERNMENT))
+		{
+			updateGovt(id,maxStudents, companyName, addressline1, addressline2, pincode);
+		}
+		
+	}
+	
+	
+    private void updateGovt(int id,int maxStudents, String companyName, String addressline1, String addressline2,
+			int pincode) {
+    	GovernmentDAO dao = new GovernmentDAO();
+		Government org = dao.findById(id);
+
+		Pincode pin = new PincodeDAO().findByPin(pincode).get(0);
+		Address address =org.getAddress();
+		address.setAddressline1(addressline1);
+		address.setAddressline2(addressline2);
+		address.setPincode(pin);
+
+		org.setName(companyName);
+		org.setMaxStudents(maxStudents);
+		
+		Session session = dao.getSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+
+			dao.attachDirty(org);
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null)
+				tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+    	
+	}
+
+	private void updateCompany(int id,int maxStudents, String companyName, String addressline1, String addressline2,
+			int pincode) {
+		
+		CompanyDAO dao = new CompanyDAO();
+		Company org = dao.findById(id);
+
+		Pincode pin = new PincodeDAO().findByPin(pincode).get(0);
+		Address address = org.getAddress();
+		address.setAddressline1(addressline1);
+		address.setAddressline2(addressline2);
+		address.setPincode(pin);
+
+		org.setName(companyName);
+		org.setMaxStudents(maxStudents);
+		
+		Session session = dao.getSession();
+		Transaction tx = null;
+		try {
+			tx = session.beginTransaction();
+
+			dao.attachDirty(org);
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null)
+				tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+				
+	}
+
+	private void updateCollege(int id,int maxStudents, String companyName, String addressline1, String addressline2,
+			int pincode) {	
+		
+		CollegeDAO dao = new CollegeDAO();
+		College org = dao.findById(id);
+
+			Pincode pin = new PincodeDAO().findByPin(pincode).get(0);
+			Address address = org.getAddress();
+			address.setAddressline1(addressline1);
+			address.setAddressline2(addressline2);
+			address.setPincode(pin);
+
+			org.setName(companyName);
+			org.setMaxStudents(maxStudents);
+			
+			Session session = dao.getSession();
+			Transaction tx = null;
+			try {
+				tx = session.beginTransaction();
+
+				dao.attachDirty(org);
+				tx.commit();
+			} catch (HibernateException e) {
+				if (tx != null)
+					tx.rollback();
+				e.printStackTrace();
+			} finally {
+				session.close();
+			}
+	}
+
+	public List<Student> getAllStudentsInOrganization(int organizationId){
     	StudentDAO sdao = new StudentDAO();		
 		List<Student> studentsInOrg = sdao.findByProperty("organization", organizationId);		
 		return studentsInOrg;    	
